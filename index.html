@@ -22,11 +22,10 @@
       <li v-for="(log, index) in logs" :key="index">{{ log.what }} at {{ log.when }}</li>
     </ul>
 
-    <!-- Confetti Canvas -->
     <canvas id="confetti-canvas" class="absolute inset-0 pointer-events-none"></canvas>
   </div>
 
-  <!-- Confetti Script -->
+  <!-- Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <script>
@@ -38,10 +37,18 @@
         let lastFocus = 0;
         let lastBlur = 0;
 
+        const baseUpi = {
+          pa: "g1g4822917.rzp@icici",
+          pn: "G1G4",
+          tr: "RZPQhptbTHPKvHtK8qrv2",
+          tn: "Payment to G1G4",
+          am: "1",
+          cu: "INR"
+        };
+
         function getCurrentTime() {
           const now = new Date();
-          const time = now.toLocaleTimeString() + ':' + now.getMilliseconds();
-          return time;
+          return now.toLocaleTimeString() + ':' + now.getMilliseconds();
         }
 
         function recordEvent(what) {
@@ -56,25 +63,29 @@
           });
         }
 
+        function buildUri(scheme) {
+          const { pa, pn, tr, tn, am, cu } = baseUpi;
+          return `${scheme}://upi/pay?pa=${encodeURIComponent(pa)}&pn=${encodeURIComponent(pn)}&tr=${encodeURIComponent(tr)}&tn=${encodeURIComponent(tn)}&am=${am}&cu=${cu}`;
+        }
+
         function launch(app) {
           let uri = "";
           if (app === 'paytm') {
             recordEvent("Opening Paytm");
-            uri = "paytmmp://pay?pa=upi@razorpay&pn=VDojo&tr=TX123456&am=1&cu=INR";
+            uri = buildUri("paytmmp");
           } else if (app === 'gpay') {
             recordEvent("Opening GPay");
-            uri = "gpay://upi/pay?pa=upi@razorpay&pn=VDojo&tr=TX123456&am=1&cu=INR";
+            uri = buildUri("gpay");
           } else if (app === 'phonepe') {
             recordEvent("Opening PhonePe");
-            uri = "phonepe://pay?pa=upi@razorpay&pn=VDojo&tr=TX123456&am=1&cu=INR";
+            uri = buildUri("phonepe");
           } else {
             recordEvent("Opening UPI Generic");
-            uri = "upi://pay?pa=upi@razorpay&pn=VDojo&tr=TX123456&am=1&cu=INR";
+            uri = buildUri("upi");
           }
 
           lastFocus = 0;
           lastBlur = 0;
-
           window.open(uri, "_self");
         }
 
@@ -85,10 +96,10 @@
         window.addEventListener("blur", () => {
           lastBlur = Date.now();
           if (lastFocus !== 0 && lastBlur - lastFocus < 2000) {
-            recordEvent("UPI App Opened ✅");
+            recordEvent("✅ UPI App Opened");
             triggerConfetti();
           } else {
-            recordEvent("UPI App Not Opened ❌");
+            recordEvent("❌ UPI App Not Opened");
           }
         });
 
